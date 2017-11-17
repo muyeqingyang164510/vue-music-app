@@ -1,5 +1,10 @@
 <template>
-  <scroll :data="data" class="listview" ref="listview">
+  <scroll :data="data" 
+          class="listview"
+          ref="listview"
+          :listenScroll="listenScroll"
+          @scroll="scroll"
+  >
     <ul>
       <li v-for="group in data" class="list-group" ref="listGroup">
         <h2 class="list-group-title">{{group.title}}</h2>
@@ -31,6 +36,14 @@
   export default {
     created() {
       this.touch = {}
+      this.listenScroll = true
+      this.listHeight = []
+    },
+    data() {
+      return {
+        scrollY: -1,
+        currentIndex: 0
+      }
     },
     props: {
       data: {
@@ -63,8 +76,22 @@
 
         this._scrollTo(anchorIndex)
       },
+      scroll(pos) {
+        this.scrollY = pos.y
+      },
       _scrollTo(index) {
-        this.$refs.listview.scrollToElement(this.$refs.listGroup[index], 0)
+        this.$refs.listview.scrollToElement(this.$refs.listGroup[index], 500) // 0 滚动的动画时间
+      },
+      _calculateHeight() {
+        this.listHeight = []
+        const list = this.$refs.listGroup
+      }
+    },
+    watch: {
+      data() {
+        setTimeout(() => {
+          this._calculateHeight()
+        }, 20);
       }
     },
     components: {
