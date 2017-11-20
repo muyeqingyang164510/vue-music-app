@@ -12,7 +12,7 @@ Vue.use(VueLazyLoad, {
 })
 /* eslint-disable no-new */
 // 其实只是简写的方式
-// 大写的服
+// 大写的服666
 // 如果不涉及使用this的话下面这个也是等价的
 // {
 //     render: function (h) {
