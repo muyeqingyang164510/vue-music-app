@@ -11,7 +11,7 @@ Vue.use(VueLazyLoad, {
   loading: require('common/image/default.png')
 })
 /* eslint-disable no-new */
-// 其实只是简写的方式。注释
+// 其实只是简写的方式
 // 如果不涉及使用this的话下面这个也是等价的
 // {
 //     render: function (h) {
