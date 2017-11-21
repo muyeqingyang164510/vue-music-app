@@ -8,6 +8,8 @@
   import BScroll from 'better-scroll'
 
   export default {
+    // 通过作用域理解data 和 props，data的作用域是仅仅适用于内部而对外部的调用方是不可见的，是一个私有的组件成员变量，
+    // props是内外部都可见，是一个公共的组件成员变量。
     props: {
       probeType: {
         type: Number,
