@@ -23,7 +23,7 @@
         type: Array,
         default: null
       },
-      listenScroll: {
+      listenScroll: { // 判断是否需要监听滚动事件
         type: Boolean,
         default: false
       }

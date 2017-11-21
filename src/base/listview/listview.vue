@@ -1,10 +1,5 @@
 <template>
-  <scroll :data="data" 
-          class="listview"
-          ref="listview"
-          :listenScroll="listenScroll"
-          @scroll="scroll"
-  >
+  <scroll :data="data" class="listview" ref="listview" :listenScroll="listenScroll" @scroll="scroll">
     <ul>
       <li v-for="group in data" class="list-group" ref="listGroup">
         <h2 class="list-group-title">{{group.title}}</h2>
@@ -28,27 +23,29 @@
 </template>
 
 <script type="text/ecmascript-6">
+// 左边列表和右边导航联动高亮效果处理分析: 右侧要知道左侧滚动的位置,左侧y轴滚动距离.
+
   import Scroll from 'base/scroll/scroll'
   import {getData} from 'common/js/dom'
 
   const ANCHOR_HEIGHT = 18
-  
+
   export default {
     created() {
       this.touch = {}
       this.listenScroll = true
       this.listHeight = []
     },
-    data() {
-      return {
-        scrollY: -1,
-        currentIndex: 0
-      }
-    },
     props: {
       data: {
         type: Array,
         default: []
+      }
+    },
+    data() {
+      return {
+        scrollY: -1,
+        currentIndex: 0
       }
     },
     computed: {
@@ -82,16 +79,44 @@
       _scrollTo(index) {
         this.$refs.listview.scrollToElement(this.$refs.listGroup[index], 500) // 0 滚动的动画时间
       },
-      _calculateHeight() {
+      _calculateHeight() { // 计算listGroup的高度
         this.listHeight = []
         const list = this.$refs.listGroup
+        let height = 0
+        this.listHeight.push(height)
+        for (let i = 0; i < list.length; i++) {
+          let item = list[i]
+          height += item.clientHeight
+          this.listHeight.push(height)
+        }
       }
     },
     watch: {
       data() {
         setTimeout(() => {
           this._calculateHeight()
-        }, 20);
+        }, 20)
+      },
+      scrollY(newY) {
+        const listHeight = this.listHeight
+        // 当滚动到顶部，newY>0
+        if (newY > 0) {
+          this.currentIndex = 0
+          return
+        }
+        // 在中间部分滚动
+        for (let i = 0; i < listHeight.length - 1; i++) {
+          let height1 = listHeight[i]
+          let height2 = listHeight[i + 1]
+          if (-newY >= height1 && -newY < height2) {
+            this.currentIndex = i
+            console.log(this.currentIndex)
+            // this.diff = height2 + newY
+            return
+          }
+        }
+        // 当滚动到底部，且-newY大于最后一个元素的上限
+        this.currentIndex = listHeight.length - 2
       }
     },
     components: {
