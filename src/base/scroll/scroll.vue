@@ -13,7 +13,7 @@
     props: {
       probeType: {
         type: Number,
-        default: 1
+        default: 3 // 不节流模式
       },
       click: {
         type: Boolean,

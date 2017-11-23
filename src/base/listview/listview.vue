@@ -1,5 +1,12 @@
 <template>
-  <scroll :data="data" class="listview" ref="listview" :listenScroll="listenScroll" @scroll="scroll">
+  <scroll 
+    :data="data" 
+    class="listview" 
+    ref="listview" 
+    :listenScroll="listenScroll" 
+    @scroll="scroll"
+    :propeType="probeType"
+  >
     <ul>
       <li v-for="group in data" class="list-group" ref="listGroup">
         <h2 class="list-group-title">{{group.title}}</h2>
@@ -14,27 +21,36 @@
     <!-- 右侧导航 -->
     <div class="list-shortcut" @touchstart.stop.prevent="onShortcutTouchStart" @touchmove.stop.prevent="onShortcutTouchMove">
       <ul>
-        <li v-for="(item, index) in shortcutList" class="item" :data-index="index">
+        <li v-for="(item, index) in shortcutList" class="item" :data-index="index" :class="{'current':currentIndex===index}">
             {{item}}
         </li>
       </ul>
+    </div>
+    <div class="list-fixed" ref="fixed" v-show="fixedTitle">
+      <div class="fixed-title">{{fixedTitle}} </div>
+    </div>
+    <div v-show="!data.length" class="loading-container">
+      <loading></loading>
     </div>
   </scroll>
 </template>
 
 <script type="text/ecmascript-6">
-// 左边列表和右边导航联动高亮效果处理分析: 右侧要知道左侧滚动的位置,左侧y轴滚动距离.
+// 左边列表和右边导航联动高亮效果处理分析: 右侧要知道左侧滚动的位置,左侧y轴滚动距离。
 
   import Scroll from 'base/scroll/scroll'
+  import Loading from 'base/loading/loading'
   import {getData} from 'common/js/dom'
 
   const ANCHOR_HEIGHT = 18
+  const TITLE_HEIGHT = 30
 
   export default {
     created() {
       this.touch = {}
       this.listenScroll = true
       this.listHeight = []
+      this.probeType = 3
     },
     props: {
       data: {
@@ -45,7 +61,8 @@
     data() {
       return {
         scrollY: -1,
-        currentIndex: 0
+        currentIndex: 0,
+        diff: -1
       }
     },
     computed: {
@@ -54,6 +71,12 @@
         return this.data.map((group) => {
           return group.title.substr(0, 1)
         })
+      },
+      fixedTitle() {
+        if (this.scrollY > 0) {
+          return ''
+        }
+        return this.data[this.currentIndex] ? this.data[this.currentIndex].title : ''
       }
     },
     methods: {
@@ -77,23 +100,33 @@
         this.scrollY = pos.y
       },
       _scrollTo(index) {
+        if (!index && index !== 0) {
+          return
+        }
+        if (index < 0) {
+          index = 0
+        } else if (index > this.listHeight.length - 2) {
+          index = this.listHeight.length - 2
+        }
+        this.scrollY = this.listHeight[index]
         this.$refs.listview.scrollToElement(this.$refs.listGroup[index], 500) // 0 滚动的动画时间
       },
-      _calculateHeight() { // 计算listGroup的高度
-        this.listHeight = []
+      _calculateHeight() { // 计算每个listGroup的高度
+        this.listHeight = [] // 每个listGroup距离底部的距离
         const list = this.$refs.listGroup
         let height = 0
         this.listHeight.push(height)
         for (let i = 0; i < list.length; i++) {
           let item = list[i]
-          height += item.clientHeight
+          height += item.clientHeight // clientHeight 直接获取dom高度
           this.listHeight.push(height)
         }
+        // console.log(this.listHeight)
       }
     },
     watch: {
       data() {
-        setTimeout(() => {
+        setTimeout(() => { // dom 渲染后就可以计算
           this._calculateHeight()
         }, 20)
       },
@@ -110,17 +143,26 @@
           let height2 = listHeight[i + 1]
           if (-newY >= height1 && -newY < height2) {
             this.currentIndex = i
-            console.log(this.currentIndex)
-            // this.diff = height2 + newY
+            // console.log(this.currentIndex)
+            this.diff = height2 + newY
             return
           }
         }
         // 当滚动到底部，且-newY大于最后一个元素的上限
         this.currentIndex = listHeight.length - 2
+      },
+      diff(newVal) {
+        let fixedTop = (newVal > 0 && newVal < TITLE_HEIGHT) ? newVal - TITLE_HEIGHT : 0
+        if (this.fixedTop === fixedTop) {
+          return
+        }
+        this.fixedTop = fixedTop
+        this.$refs.fixed.style.transform = `translate3d(0,${fixedTop}px,0)`
       }
     },
     components: {
-      Scroll
+      Scroll,
+      Loading
     }
   }
 </script>
